@@ -1,0 +1,72 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scraper-deployment
+  labels:
+    app: scraper-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scraper-deployment
+  template:
+    metadata:
+      labels:
+        app: scraper-deployment
+    spec:
+      containers:
+        - name: pproxy
+          image: mosajjal/pproxy:latest-uv
+          env:
+            - name: REMOTE_PROXY_URI
+              valueFrom:
+                secretKeyRef:
+                  name: pproxy-secret
+                  key: remote-uri
+          args:
+            - -l
+            - http://localhost:4321
+            - -r
+            - "$(REMOTE_PROXY_URI)"
+          resources:
+            limits:
+              cpu: "200m"
+              memory: "128Mi"
+            requests:
+              cpu: "100m"
+              memory: "64Mi"
+        - name: rfm-scraper
+          image: aleksandrivanov22/rfm-scraper-script:latest
+          env:
+            - name: HTTPS_PROXY
+              value: http://localhost:4321
+            - name: HTTP_PROXY
+              value: http://localhost:4321
+            - name: PYTHON_ENV
+              value: prod
+            - name: LOG_LEVEL
+              value: INFO
+            - name: MONGO_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: host
+            - name: MONGO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: username
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: password
+          resources:
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+            requests:
+              cpu: "150m"
+              memory: "128Mi"
+      restartPolicy: Always
