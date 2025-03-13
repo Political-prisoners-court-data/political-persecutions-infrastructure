@@ -2,18 +2,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: scraper-deployment
+  name: rfm-scraper-deployment
   labels:
-    app: scraper-deployment
+    app: rfm-scraper-deployment
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: scraper-deployment
+      app: rfm-scraper-deployment
   template:
     metadata:
       labels:
-        app: scraper-deployment
+        app: rfm-scraper-deployment
     spec:
       containers:
         - name: pproxy
