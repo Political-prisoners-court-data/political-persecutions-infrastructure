@@ -50,17 +50,17 @@ spec:
             - name: MONGO_HOST
               valueFrom:
                 secretKeyRef:
-                  name: mongo-secret
+                  name: mongo-scraper-secret
                   key: host
             - name: MONGO_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: mongo-secret
+                  name: mongo-scraper-secret
                   key: username
             - name: MONGO_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: mongo-secret
+                  name: mongo-scraper-secret
                   key: password
           resources:
             limits:
@@ -70,3 +70,51 @@ spec:
               cpu: "150m"
               memory: "128Mi"
       restartPolicy: Always
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deployment
+  labels:
+    app: web-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web-deployment
+  template:
+    metadata:
+      labels:
+        app: web-deployment
+    spec:
+      containers:
+        - env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-web-secret
+                  key: DATABASE_URL
+          image: persecutions-web
+          name: persecutions-web
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+          workingDir: /app
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f ../political-persecutions-web/docker-build/compose.yaml
+    kompose.version: 1.35.0 ()
+  labels:
+    io.kompose.service: app
+  name: app
+spec:
+  ports:
+    - name: "3000"
+      port: 3000
+      targetPort: 3000
+  selector:
+    io.kompose.service: app
