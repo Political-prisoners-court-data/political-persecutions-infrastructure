@@ -2,22 +2,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: scraper-deployment
+  name: rfm-scraper-deployment
+  namespace: default
   labels:
-    app: scraper-deployment
+    app: rfm-scraper-deployment
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: scraper-deployment
+      app: rfm-scraper-deployment
   template:
     metadata:
       labels:
-        app: scraper-deployment
+        app: rfm-scraper-deployment
     spec:
-      containers:
+      initContainers:
         - name: pproxy
           image: mosajjal/pproxy:latest-uv
+          restartPolicy: Always
           env:
             - name: REMOTE_PROXY_URI
               valueFrom:
@@ -36,6 +38,7 @@ spec:
             requests:
               cpu: "100m"
               memory: "64Mi"
+      containers:
         - name: rfm-scraper
           image: aleksandrivanov22/rfm-scraper-script:latest
           env:
@@ -50,17 +53,17 @@ spec:
             - name: MONGO_HOST
               valueFrom:
                 secretKeyRef:
-                  name: mongo-secret
+                  name: mongo-scraper-secret
                   key: host
             - name: MONGO_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: mongo-secret
+                  name: mongo-scraper-secret
                   key: username
             - name: MONGO_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: mongo-secret
+                  name: mongo-scraper-secret
                   key: password
           resources:
             limits:
@@ -70,3 +73,52 @@ spec:
               cpu: "150m"
               memory: "128Mi"
       restartPolicy: Always
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deployment
+  namespace: default
+  labels:
+    app: web-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web-deployment
+  template:
+    metadata:
+      labels:
+        app: web-deployment
+    spec:
+      containers:
+        - name: persecutions-web
+          image: aleksandrivanov22/political-persecutions-web:latest
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+          workingDir: /app
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-web-secret
+                  key: database-url
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+  namespace: default
+  labels:
+    app: web-service
+spec:
+  selector:
+    app: web-deployment
+  ports:
+    - name: web-service-port
+      protocol: TCP
+      port: 3000
+  type: LoadBalancer
+  loadBalancerIP: ""
