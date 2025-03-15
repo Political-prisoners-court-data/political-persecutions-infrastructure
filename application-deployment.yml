@@ -3,6 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: rfm-scraper-deployment
+  namespace: default
   labels:
     app: rfm-scraper-deployment
 spec:
@@ -75,6 +76,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: web-deployment
+  namespace: default
   labels:
     app: web-deployment
 spec:
@@ -88,33 +90,33 @@ spec:
         app: web-deployment
     spec:
       containers:
-        - env:
-            - name: DATABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: mongo-web-secret
-                  key: DATABASE_URL
-          image: persecutions-web
-          name: persecutions-web
+        - name: persecutions-web
+          image: aleksandrivanov22/political-persecutions-web:latest
           ports:
             - containerPort: 3000
               protocol: TCP
           workingDir: /app
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-web-secret
+                  key: database-url
       restartPolicy: Always
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  annotations:
-    kompose.cmd: kompose convert -f ../political-persecutions-web/docker-build/compose.yaml
-    kompose.version: 1.35.0 ()
+  name: web-service
+  namespace: default
   labels:
-    io.kompose.service: app
-  name: app
+    app: web-service
 spec:
-  ports:
-    - name: "3000"
-      port: 3000
-      targetPort: 3000
   selector:
-    io.kompose.service: app
+    app: web-deployment
+  ports:
+    - name: web-service-port
+      protocol: TCP
+      port: 3000
+  type: LoadBalancer
+  loadBalancerIP: ""
