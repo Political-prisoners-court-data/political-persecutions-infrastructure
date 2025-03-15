@@ -16,9 +16,10 @@ spec:
       labels:
         app: rfm-scraper-deployment
     spec:
-      containers:
+      initContainers:
         - name: pproxy
           image: mosajjal/pproxy:latest-uv
+          restartPolicy: Always
           env:
             - name: REMOTE_PROXY_URI
               valueFrom:
@@ -37,6 +38,7 @@ spec:
             requests:
               cpu: "100m"
               memory: "64Mi"
+      containers:
         - name: rfm-scraper
           image: aleksandrivanov22/rfm-scraper-script:latest
           env:
