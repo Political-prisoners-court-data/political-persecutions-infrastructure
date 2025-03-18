@@ -1,0 +1,18 @@
+auth:
+  rootPassword: "changeme"
+  usernames:
+    - "web"
+    - "scraper"
+  passwords:
+    - "changeme"
+    - "changeme"
+  databases:
+    - "eventsDb"
+    - "rfmDb"
+initdbScripts:
+  scraperRoleEventsDb.js: |
+    use rfmDb;
+    db.grantRolesToUser(
+        "scraper",
+        [{role: "readWrite", db: "eventsDb"}]
+    );

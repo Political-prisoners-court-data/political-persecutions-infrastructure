@@ -104,6 +104,13 @@ spec:
                 secretKeyRef:
                   name: mongo-web-secret
                   key: database-url
+          resources:
+            limits:
+              cpu: "750m"
+              memory: "640Mi"
+            requests:
+              cpu: "500m"
+              memory: "320Mi"
       restartPolicy: Always
 ---
 apiVersion: v1
