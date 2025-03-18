@@ -16,4 +16,4 @@ cd ../../../
 ```Bash
 kubectl apply -f application-deployment.yml
 ```
-- Web interface is available on `http://localhost:3000/rfm-updates`
+- Web interface is available on [http://localhost:3000/rfm-updates](http://localhost:3000/rfm-updates)
